@@ -1,0 +1,132 @@
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-M2SQL-04/
+Expire all the objects after 28 days.
+================================================
+================================================
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-M2SQLR3$M2SQLAG1/M2
+1st backup of each month is moved to glacier after 31 days and then kept in glacier for 2 years and expired after 740 days
+1st backup of each year is moved to glacier after 31 days and archived indefinitely with no expiration.
+
+================================================
+================================================
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-M2SQLR3$M2SQLAG1
+1st backup of each month moved to glacier after 28 days and expired after 122 days (4 months)
+All other weekly backups on S3 (not first backups of month) can be expired in 62 days (2 months)
+================================================
+================================================
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-MACOLA-04/
+move all month end (last day of month) backups to deep archive after 31 days -- do not expire (this will include all year end backups too)
+expire all other Sunday(s) weekly backups after 2 months (62 days)
+
+Note: expire all other Sunday(s) weekly backups after 2 months (62 days)
+
+
+
+
+
+
+Date_key= obtained from object key in format YYYYMMDD like 20221204
+now I used that date_key to get object creation days,
+as per requirement I have to implement different logic on 3 different folders,
+so for
+=========================================================================
+1.Prod/PAM-M2SQL-04/
+    Expire all the objects after 28 days.
+    so I added tag "PAM_M2SQL_04_EXPIRATION": true to all the objects whose time > 28 days
+=========================================================================
+2. Prod/PAM_M2SQLR3_M2SQLAG1
+Requirements were
+=========================================================================
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-M2SQLR3$M2SQLAG1/M2
+1st backup of each month is moved to glacier after 31 days and then kept in glacier for 2 years and expired after 740 days
+1st backup of each year is moved to glacier after 31 days and archived indefinitely with no expiration.
+==========================================================================
+==========================================================================
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-M2SQLR3$M2SQLAG1
+1st backup of each month moved to glacier after 28 days and expired after 122 days (4 months)
+All other weekly backups on S3 (not first backups of month) can be expired in 62 days (2 months)
+==========================================================================
+Solution:
+so in function PAM_M2SQLR3_M2SQLAG1_tagging
+got a list of all the month start days(1st of every month) starting from 2021 till this year(2021 was hard coded variable as start year while current year is obtained by datetime.now())
+got a list of all 1st january dates for yearly backups.
+than in conditions I checked for M2 objects
+conditions:
+if date is in starting date of month and time is more than 31 days -> add tag "PAM_M2SQLR3_M2SQLAG1_GLACIER"
+if date is not in list of yearly backups(januray) and time is more than 740 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+if date is not stating date of month and time is greater than 62 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+__________________________________________________________________________________________
+similary for other than M2 objects
+conditions:
+if date is in starting date of month and time is more than 28 days -> add tag "PAM_M2SQLR3_M2SQLAG1_GLACIER"
+if date is not in list of yearly backups(januray) and time is more than 122 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+if date is not stating date of month and time is greater than 62 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+========================================================================
+3. Prod/PAM-MACOLA-04/
+========================================================================
+Requirements were
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-MACOLA-04/
+move all month end (last day of month) backups to deep archive after 31 days -- do not expire (this will include all year end backups too)
+expire all other Sunday(s) weekly backups after 2 months (62 days)
+Solution:
+Got list of all month end dates starting from 2021 till current year
+checked
+if date is in last days of months and time is greater than 31 days: -> add tag "PAM_MACOLA_04_DEEP_ARCHIVE"
+if date is not in last days of months and time is greater than 62 days -> add tag 'PAM_MACOLA_04_EXPIRATION'
+
+
+
+
+Summary of solution:
+1.Prod/PAM-M2SQL-04/
+    Expire all the objects after 28 days.
+    so I added tag "PAM_M2SQL_04_EXPIRATION": true to all the objects whose time > 28 days
+Life cycle policy Implementation:
+1. Add filter to limit the scope of this rule to a single prefix. (Prod/PAM-M2SQL-04/)
+2. Add this tag to filter objects: "PAM_M2SQL_04_EXPIRATION":true
+In life-cycle rule actions
+check "Expire current versions of objects" and set "Days after object creation" to 1.
+2. Prod/PAM-M2SQLR3$M2SQLAG1
+in s3-tagging-glacier-function
+for /M2
+if date is in starting date of month and time is more than 31 days -> add tag "PAM_M2SQLR3_M2SQLAG1_GLACIER"
+for other folders
+if date is in starting date of month and time is more than 28 days -> add tag "PAM_M2SQLR3_M2SQLAG1_GLACIER"
+------------------------------------------------------------------------------------------------------------------------------
+in s3-tagging-expiration-funcion
+for /M2
+if date is not in list of yearly backups(januray) and time is more than 740 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+if date is not stating date of month and time is greater than 62 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+for other folders
+if date is not in list of yearly backups(januray) and time is more than 122 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+if date is not stating date of month and time is greater than 62 days -> add tag 'PAM_M2SQLR3_M2SQLAG1_EXPIRATION'
+-------------------------------------------------------------------------------------------------------------------------------
+Life cycle policy Implementation for expiration:
+1. Add filter to limit the scope of this rule to a single prefix. (Prod/PAM-M2SQLR3$M2SQLAG1)
+2. Add this tag to filter objects: "PAM_M2SQLR3_M2SQLAG1_EXPIRATION":true
+In life-cycle rule actions
+check "Expire current versions of objects" and set "Days after object creation" to 1.
+
+Life cycle policy Implementation for Glacier:
+1. Add filter to limit the scope of this rule to a single prefix. (Prod/PAM-M2SQLR3$M2SQLAG1)
+2. Add this tag to filter objects: "PAM_M2SQLR3_M2SQLAG1_GLACIER":true
+In life-cycle rule actions
+check "Move current versions of objects between storage classes" and set "Days after object creation" to 1.
+3. Prod/PAM-MACOLA-04/
+In s3-tagging-glacier-function
+if date is in last days of months and time is greater than 31 days: -> add tag "PAM_MACOLA_04_DEEP_ARCHIVE"
+
+In s3-tagging-expiration-function
+if date is not in last days of months and time is greater than 62 days -> add tag 'PAM_MACOLA_04_EXPIRATION'
+------------------------------------------------------------------------------------------------------------------------------
+
+Life cycle policy Implementation for expiration:
+1. Add filter to limit the scope of this rule to a single prefix. (Prod/PAM-MACOLA-04/)
+2. Add this tag to filter objects: "PAM_MACOLA_04_EXPIRATION":true
+In life-cycle rule actions
+check "Expire current versions of objects" and set "Days after object creation" to 1.
+
+Life cycle policy Implementation for Glacier:
+1. Add filter to limit the scope of this rule to a single prefix. (Prod/PAM-MACOLA-04/)
+2. Add this tag to filter objects: "PAM_MACOLA_04_DEEP_ARCHIVE":true
+In life-cycle rule actions
+check "Move current versions of objects between storage classes" and set "Days after object creation" to 1.

@@ -1,0 +1,334 @@
+service: my-test-python-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: us-west-2
+  stage: dev
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${sls:stage}-Nurse
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:${aws:region}:*:table/*"
+
+functions:
+  create_nurse:
+    handler: lambdas/create_nurse.handler
+    events:
+      - http:
+          path: /Nurse
+          method: post
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+                    
+  get_nurse:
+    handler: lambdas/get_nurse.handler
+    events:
+      - http: 
+          path: /Nurse
+          method: get
+          cors: true
+          integration: lambda  
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  get_single_nurse:
+    handler: lambdas/get_single_nurse.handler
+    events:
+      - http:
+          path: /Nurse/{id}
+          method: get
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                { "id" : "$input.params('id')" }
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  delete_single_nurse:
+    handler: lambdas/delete_nurse.handler
+    events:
+      - http:
+          path: /Nurse
+          method: delete
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  update_single_nurse:
+    handler: lambdas/update_nurse.handler
+    events:
+      - http:
+          path: /Nurse
+          method: put
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  create_patient:
+    handler: lambdasP/create_patient.handler
+    events:
+      - http:
+          path: /Patient
+          method: post
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+                    
+  create_nd_assign_patient:
+    handler: lambdasP/create_nd_assign.handler
+    events:
+      - http:
+          path: /Patient/CreatendAssign
+          method: post
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  assign_nurse_patient:
+    handler: lambdasP/nurse_assign_to_patient.handler
+    events:
+      - http:
+          path: /Patient/AssignNurse
+          method: post
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+
+  get_patient:
+    handler: lambdasP/get_patient.handler
+    events:
+      - http:
+          path: /Patient
+          method: get
+          cors: true
+          integration: lambda  
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  get_single_patient:
+    handler: lambdasP/get_single_patient.handler
+    events:
+      - http:
+          path: /Patient/{id}
+          method: get
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                { "id" : "$input.params('id')" }
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  delete_single_patient:
+    handler: lambdasP/delete_patient.handler
+    events:
+      - http:
+          path: /Patient
+          method: delete
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+  update_single_patient:
+    handler: lambdasP/update_patient.handler
+    events:
+      - http:
+          path: /Patient
+          method: put
+          cors: true
+          integration: lambda  
+          request:
+            passThrough: WHEN_NO_TEMPLATES
+            template:
+              application/json: > 
+                {"body" : $input.json('$')}
+          response:
+            headers:
+              Access-Control-Allow-Origin: "'*'"
+            statusCodes:
+              400:
+                pattern: '.*wrong.*'
+                template:
+                  application/json: >
+                    #set ($errorMessageObj = $input.path('$.errorMessage'))
+                    $errorMessageObj[]
+
+resources:
+  Resources:
+    NursesDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+
+    PatientDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: "Danish-python-api-Patient"

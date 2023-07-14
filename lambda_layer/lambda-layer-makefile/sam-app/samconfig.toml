@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "lambda-layer-2"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1nvqw2uq16rih"
+s3_prefix = "lambda-layer-2"
+region = "us-west-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+image_repositories = []

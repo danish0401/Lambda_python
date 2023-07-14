@@ -1,0 +1,14 @@
+PADI Tagging and deleting and archiving S3.
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-M2SQL-04/
+expire after 28 days , do not archive
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-M2SQLR3$M2SQLAG1/
+use the same policy as applied to all folders in s3://usw2-padi-dbbackups/Prod/PAM-M2SQLR3/
+(Objects in “FULL” subfolder in each folder of “usw2-padi-dbbackups/Prod/PAM-M2SQLR3/M2" are moved to glacier as follow:
+1st backups of each month is moved to glacier after 31 days and then kept in glacier for 2 years and expired after 740 days
+1st backup of each year is moved to glacier after 31 days and archived indefinitely with no expiration.
+Objects in all other “Full” subfolders have their 1st backups of each month moved to glacier after 28 days and expired after 122 days)
+All other weekly backups on S3 (not first backups of month) can be expired in 2 months (62 days)
+s3://usw2-padi-dbbackups-weekly/Prod/PAM-MACOLA-04/
+move all month end (last day of month) backups to deep archive after 31 days -- do not expire
+(this will include all year end backups too )
+expire all other sunday weekly backups after 2 months (62 days)

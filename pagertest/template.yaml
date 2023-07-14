@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  pagerDuty-slack
+
+  Sample SAM Template for pagerDuty-slack
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+
+  pagerDuty:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: pagerDuty/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+        
+      Policies:
+      - Statement:
+        - Sid: pagerDutySlackRole
+          Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          - cloudwatch:*
+          Resource: '*'
+
+      Environment:
+        Variables:
+          SECRET_NAME: slack_token
+          chanel_Id: "C04MCE18PPD"
+          watcher_IDs: UFN7Q9S04,U03QTU888CQ
+      Events:
+        EveryOneHourEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 * * * ? *)
+
+
+

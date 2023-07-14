@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'lambda-layer-app Sample SAM Template for lambda-layer-app
+
+  '
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: lambda-layer-makefile
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Layers:
+      - Ref: layerlibs
+      CodeUri: Function
+    Metadata:
+      SamResourceId: Function
+  layerlibs:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: lambda-layer4
+      Description: Lambda layer
+      ContentUri: layerlibs
+      CompatibleRuntimes:
+      - python3.8
+    Metadata:
+      BuildMethod: makefile
+      SamResourceId: layerlibs
