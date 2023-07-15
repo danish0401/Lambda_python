@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An example SAM template for a Lambda function that's invoked by a CloudWatch Event.
+
+Resources:
+  UserGroupMention:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: UserGroupMention
+      CodeUri: ./handlers
+      Handler: user-group-mention.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      Events:
+        HttpPost:
+          Type: Api
+          Properties:
+            Path: '/usergroup-mention'
+            Method: post
+      Description: function that is involed by slack.
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+          Variables:
+            SLACK_BOT_TOKEN: xoxb-497707237954-4831417630595-8oCGYTMVWgVB7sPCiS2HwUBR
+            USER_GROUP_NAME: <!subteam^S04PT49B0LT|@oncalltest>
+            FORWARD_MESSAGE_CHANNEL_WEBHOOK_URL: https://hooks.slack.com/services/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
+            DYNAMODB_TABLE_NAME: SlackDuplicateMessages
+            DYNAMODB_TTL_PROPERTY_NAME: MESSAGE_TS
+            SLACK_SIGNING_SECRET: a1b908a68ef02d6fd4a4811486a7e5d3
+
+      Policies:
+            - Statement:
+                - Sid: userMDynamoDBPolicy
+                  Effect: Allow
+                  Action:
+                    - dynamodb:Query
+                    - dynamodb:Scan
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                    - dynamodb:UpdateItem
+                    - dynamodb:DeleteItem
+                  Resource:
+                    - !GetAtt MyTable.Arn
+
+  MyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: SlackDuplicateMessages
+      AttributeDefinitions:
+        - AttributeName: MESSAGE_TS
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MESSAGE_TS
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: true
